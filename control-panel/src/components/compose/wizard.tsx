@@ -55,7 +55,10 @@ export function CompositionWizard({ onComplete }: WizardProps) {
 
   const toggleAgent = (value: string) => {
     const current = selectedAgents ?? [];
-    setValue("ai_agents", current.includes(value) ? current.filter((a) => a !== value) : [...current, value]);
+    const updated = current.includes(value)
+      ? current.filter((a) => a !== value)
+      : [...current, value];
+    setValue("ai_agents", updated);
   };
 
   const onSubmit = async (data: ManifestForm) => {

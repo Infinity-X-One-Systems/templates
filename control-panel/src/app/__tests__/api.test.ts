@@ -3,16 +3,17 @@
  * These test the business logic of the route handlers.
  */
 
+// Jest mocks must be defined at module level before any imports that use them
+jest.mock("next/server", () => ({
+  NextResponse: {
+    json: jest.fn().mockReturnValue({ status: 200 }),
+  },
+}));
+
 describe("API routes", () => {
   describe("Health endpoint", () => {
-    it("returns ok status", async () => {
-      // Mock NextResponse
-      const mockJson = jest.fn().mockReturnValue({ status: 200 });
-      jest.mock("next/server", () => ({
-        NextResponse: { json: mockJson },
-      }));
-
-      // Verify the health check structure
+    it("returns ok status", () => {
+      // Verify the health check response structure
       const healthResponse = {
         status: "ok",
         service: "infinity-control-panel",

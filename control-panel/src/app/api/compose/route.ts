@@ -49,23 +49,39 @@ export async function POST(request: NextRequest) {
   const githubOrg = parsed.data.org;
   const githubRepo = process.env.TEMPLATE_REPO ?? "templates";
 
+  let dispatchStatus = "skipped (no GITHUB_TOKEN)";
   if (githubToken) {
-    await fetch(`https://api.github.com/repos/${githubOrg}/${githubRepo}/dispatches`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${githubToken}`,
-        "Content-Type": "application/json",
-        Accept: "application/vnd.github+json",
-      },
-      body: JSON.stringify(dispatchPayload),
-    });
+    try {
+      const dispatchRes = await fetch(
+        `https://api.github.com/repos/${githubOrg}/${githubRepo}/dispatches`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${githubToken}`,
+            "Content-Type": "application/json",
+            Accept: "application/vnd.github+json",
+          },
+          body: JSON.stringify(dispatchPayload),
+        }
+      );
+      if (!dispatchRes.ok) {
+        const errText = await dispatchRes.text().catch(() => dispatchRes.statusText);
+        console.error(`GitHub dispatch failed: ${dispatchRes.status} ${errText}`);
+        dispatchStatus = `failed (${dispatchRes.status})`;
+      } else {
+        dispatchStatus = "triggered";
+      }
+    } catch (err) {
+      console.error("GitHub dispatch error:", err);
+      dispatchStatus = "error (network)";
+    }
   }
 
   return NextResponse.json({
     success: true,
     system_name: parsed.data.system_name,
     manifest: parsed.data,
-    dispatch: githubToken ? "triggered" : "skipped (no GITHUB_TOKEN)",
+    dispatch: dispatchStatus,
     created_at: new Date().toISOString(),
   });
 }

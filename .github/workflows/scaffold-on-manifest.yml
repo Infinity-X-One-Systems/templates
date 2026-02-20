@@ -21,9 +21,15 @@ on:
         type: boolean
         default: false
 
+# Default minimal permissions
+permissions:
+  contents: read
+
 jobs:
   validate-manifest:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       system_name: ${{ steps.parse.outputs.system_name }}
       manifest_valid: ${{ steps.validate.outputs.valid }}
@@ -79,6 +85,8 @@ jobs:
     needs: validate-manifest
     if: needs.validate-manifest.outputs.manifest_valid == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -104,10 +112,10 @@ jobs:
             --manifest "${{ steps.manifest_path.outputs.path }}" \
             --output /tmp/generated \
             --template-root . \
-            ${{ (github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') && '--dry-run' || '' }}
+            ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Upload generated scaffold
-        if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true') }}
+        if: ${{ !inputs.dry_run }}
         uses: actions/upload-artifact@v4
         with:
           name: scaffold-${{ needs.validate-manifest.outputs.system_name }}
@@ -118,6 +126,7 @@ jobs:
     needs: [validate-manifest, scaffold]
     if: always()
     runs-on: ubuntu-latest
+    permissions: {}
     steps:
       - name: Summary
         run: |

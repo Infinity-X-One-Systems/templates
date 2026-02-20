@@ -6,11 +6,17 @@ on:
   pull_request:
     branches: [main]
 
+# Default minimal permissions for the GITHUB_TOKEN
+permissions:
+  contents: read
+
 jobs:
   # ── Engine Tests ────────────────────────────────────────────────────────────
   engine:
     name: Composition Engine Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: engine
@@ -28,6 +34,8 @@ jobs:
   fastapi-core:
     name: FastAPI Core Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: core/api-fastapi
@@ -45,6 +53,8 @@ jobs:
   ai-agents:
     name: AI Agent Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         agent: [research-agent, builder-agent, financial-agent, real-estate-agent, orchestrator, validator-agent]
@@ -65,6 +75,8 @@ jobs:
   business:
     name: Business Module Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: business/crm-automation
@@ -80,6 +92,8 @@ jobs:
   industry:
     name: Industry Module Tests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         module: [financial-trading, seo-automation, investor-dashboard]
@@ -98,6 +112,8 @@ jobs:
   manifest-validation:
     name: Validate Example Manifests
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -121,6 +137,8 @@ jobs:
   engine-integration:
     name: Composition Engine Integration Test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -138,6 +156,8 @@ jobs:
   docker-build:
     name: Docker Build Check
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
         context: [core/api-fastapi, ai/research-agent, ai/validator-agent]

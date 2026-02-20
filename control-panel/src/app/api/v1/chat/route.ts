@@ -86,9 +86,13 @@ export async function POST(request: NextRequest) {
       },
     ],
     usage: {
-      prompt_tokens: userContent.split(" ").length,
-      completion_tokens: responseContent.split(" ").length,
-      total_tokens: userContent.split(" ").length + responseContent.split(" ").length,
+      // Note: word count is used as an approximation. For accurate token counts,
+      // integrate a proper tokenizer (e.g., tiktoken for OpenAI-compatible models).
+      prompt_tokens: userContent.split(/\s+/).filter(Boolean).length,
+      completion_tokens: responseContent.split(/\s+/).filter(Boolean).length,
+      total_tokens:
+        userContent.split(/\s+/).filter(Boolean).length +
+        responseContent.split(/\s+/).filter(Boolean).length,
     },
   });
 }
