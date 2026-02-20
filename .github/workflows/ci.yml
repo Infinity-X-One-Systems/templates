@@ -165,3 +165,84 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Docker image
         run: docker build -t test-build:ci ${{ matrix.context }}
+
+  # ── Agent System Tests ──────────────────────────────────────────────────────
+  agent-system:
+    name: Agent System Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: agent-system/base
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
+
+  # ── Pipeline Stage Tests ────────────────────────────────────────────────────
+  pipeline-stages:
+    name: Pipeline Stage Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: pipelines
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest==8.3.4
+      - run: pytest -q
+
+  # ── Experimental Template Tests ─────────────────────────────────────────────
+  experimental:
+    name: Experimental Template Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module:
+          - experimental/human-ai-codriver
+          - experimental/self-improving-agent
+          - experimental/collective-intelligence
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
+
+  # ── New Template Tests ───────────────────────────────────────────────────────
+  new-templates:
+    name: New Template Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module:
+          - templates/llm-chat/multi-provider-chat
+          - templates/llm-chat/streaming-chat
+          - templates/autonomous-ai/autonomous-loop
+          - templates/universal-business
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
