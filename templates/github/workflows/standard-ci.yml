@@ -24,6 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt -r requirements-dev.txt
       - name: Run tests
+        # Assumes generated repo uses src/ layout; adjust --cov path if needed
         run: pytest --cov=src --cov-report=xml -q
       - name: Upload coverage
         uses: codecov/codecov-action@v4

@@ -53,7 +53,11 @@ print(engine.export_process_map())
 EOF
 ```
 
-## Running Tests
+## Requirements
+
+- Python 3.10+ (uses `X | Y` union syntax; tested on 3.12)
+- pydantic 2.x
+
 
 ```bash
 pip install -r requirements.txt -r requirements-dev.txt
