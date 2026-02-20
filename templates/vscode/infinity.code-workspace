@@ -1,0 +1,81 @@
+{
+  "folders": [
+    { "name": "Template Library", "path": "." }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.testing.pytestEnabled": true,
+    "python.testing.pytestArgs": ["-q"],
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "typescript.tsdk": "node_modules/typescript/lib",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/node_modules": true,
+      "**/.next": true
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "charliermarsh.ruff",
+      "esbenp.prettier-vscode",
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "GitHub.copilot",
+      "GitHub.vscode-pull-request-github",
+      "ms-azuretools.vscode-docker",
+      "bradlc.vscode-tailwindcss",
+      "dbaeumer.vscode-eslint"
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "FastAPI (core)",
+        "type": "python",
+        "request": "launch",
+        "module": "uvicorn",
+        "args": ["app.main:app", "--reload", "--port", "8000"],
+        "cwd": "${workspaceFolder}/core/api-fastapi"
+      },
+      {
+        "name": "Next.js Control Panel",
+        "type": "node",
+        "request": "launch",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run", "dev"],
+        "cwd": "${workspaceFolder}/control-panel",
+        "port": 3001
+      }
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Run All Python Tests",
+        "type": "shell",
+        "command": "find . -name 'pytest.ini' -not -path '*/.git/*' | xargs -I{} dirname {} | xargs -I{} bash -c 'cd {} && python -m pytest tests/ -q 2>&1 | tail -1'",
+        "group": "test",
+        "presentation": { "reveal": "always" }
+      },
+      {
+        "label": "Compose System from Manifest",
+        "type": "shell",
+        "command": "python engine/scripts/compose.py --manifest manifests/example-ai-platform.json --output /tmp/generated",
+        "group": "build"
+      }
+    ]
+  }
+}

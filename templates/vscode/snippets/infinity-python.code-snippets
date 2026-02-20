@@ -1,0 +1,82 @@
+{
+  "Infinity Agent Base Class": {
+    "prefix": "inf-agent",
+    "body": [
+      "from agent_system.base.src.agent_base import AgentBase, CapabilityRef",
+      "",
+      "class ${1:MyAgent}(AgentBase):",
+      "    def __init__(self):",
+      "        super().__init__(",
+      "            name=\"${2:my-agent}\",",
+      "            role=\"${3:specialist}\",",
+      "            capabilities=[",
+      "                CapabilityRef(category=\"skills\", name=\"${4:code-generation}\"),",
+      "            ]",
+      "        )",
+      "",
+      "    def _run(self, task: dict):",
+      "        # Implement your agent logic here",
+      "        return {\"result\": task.get(\"input\")}",
+      ""
+    ],
+    "description": "Create a new Infinity agent"
+  },
+  "Infinity Pydantic Model": {
+    "prefix": "inf-model",
+    "body": [
+      "from pydantic import BaseModel, Field",
+      "from typing import Optional",
+      "from datetime import datetime, timezone",
+      "import uuid",
+      "",
+      "class ${1:ModelName}(BaseModel):",
+      "    id: str = Field(default_factory=lambda: str(uuid.uuid4()))",
+      "    ${2:field}: ${3:str}",
+      "    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())",
+      ""
+    ],
+    "description": "Create an Infinity Pydantic model"
+  },
+  "Infinity Engine Class": {
+    "prefix": "inf-engine",
+    "body": [
+      "\"\"\"",
+      "${1:ModuleName} Engine — Infinity Template Library",
+      "\"\"\"",
+      "from pydantic import BaseModel, Field",
+      "from typing import Optional",
+      "import uuid",
+      "",
+      "class ${2:EntityName}(BaseModel):",
+      "    id: str = Field(default_factory=lambda: str(uuid.uuid4()))",
+      "    ${3:name}: str",
+      "",
+      "",
+      "class ${1:ModuleName}Engine:",
+      "    def __init__(self):",
+      "        self._store: dict[str, ${2:EntityName}] = {}",
+      "",
+      "    def create_${4:entity}(self, ${3:name}: str) -> ${2:EntityName}:",
+      "        entity = ${2:EntityName}(${3:name}=${3:name})",
+      "        self._store[entity.id] = entity",
+      "        return entity",
+      ""
+    ],
+    "description": "Create an Infinity engine module"
+  },
+  "Infinity pytest Test": {
+    "prefix": "inf-test",
+    "body": [
+      "import pytest",
+      "from src.${1:engine} import ${2:MyEngine}",
+      "",
+      "",
+      "def test_${3:feature}():",
+      "    engine = ${2:MyEngine}()",
+      "    result = engine.${4:method}(${5:\"test\"})",
+      "    assert result is not None",
+      ""
+    ],
+    "description": "Create an Infinity pytest test"
+  }
+}
