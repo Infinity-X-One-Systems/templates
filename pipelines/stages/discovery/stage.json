@@ -1,0 +1,14 @@
+{
+  "stage": "discovery",
+  "order": 1,
+  "description": "Capture requirements, constraints, and context. Generate the system brief.",
+  "trigger": "manual | webhook | api",
+  "inputs": ["problem_statement", "constraints", "stakeholders", "budget"],
+  "outputs": ["system_brief", "architecture_map", "decision_log_entry"],
+  "tools": ["llm-reasoning", "web-search", "knowledge-base"],
+  "artifacts": ["discovery-report.md", "system_state.json"],
+  "governance": ["human-approval"],
+  "next_stage": "design",
+  "workflow_job": "discovery",
+  "estimated_duration_mins": 15
+}

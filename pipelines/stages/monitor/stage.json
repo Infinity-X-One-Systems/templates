@@ -1,0 +1,14 @@
+{
+  "stage": "monitor",
+  "order": 6,
+  "description": "Monitor deployed system health, performance, errors, and costs.",
+  "trigger": "deploy_complete | schedule(*/15 * * * *)",
+  "inputs": ["production_url", "deployment_manifest"],
+  "outputs": ["health_report", "alert_list", "telemetry_snapshot"],
+  "tools": ["guardian-system", "prometheus", "github-actions"],
+  "artifacts": ["telemetry.json", "health_report.md"],
+  "governance": ["audit-log", "cost-budget"],
+  "next_stage": "optimize",
+  "workflow_job": "monitor",
+  "estimated_duration_mins": 5
+}

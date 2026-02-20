@@ -1,0 +1,14 @@
+{
+  "stage": "scale",
+  "order": 8,
+  "description": "Scale infrastructure and replicate system patterns to new domains.",
+  "trigger": "optimize_complete | manual",
+  "inputs": ["deployment_manifest", "metrics", "optimization_report"],
+  "outputs": ["scaled_infrastructure", "replication_manifests", "cost_projection"],
+  "tools": ["kubernetes", "terraform", "compose-engine"],
+  "artifacts": ["scale_plan.json", "infrastructure_update.json"],
+  "governance": ["tap-protocol", "cost-budget", "human-approval"],
+  "next_stage": "discovery",
+  "workflow_job": "scale",
+  "estimated_duration_mins": 30
+}

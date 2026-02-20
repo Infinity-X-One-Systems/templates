@@ -1,0 +1,14 @@
+{
+  "stage": "design",
+  "order": 2,
+  "description": "Architect the system. Select templates. Generate the system manifest.",
+  "trigger": "discovery_complete",
+  "inputs": ["system_brief", "template_library", "constraints"],
+  "outputs": ["system_manifest", "architecture_diagram", "dependency_graph"],
+  "tools": ["template-engine", "llm-reasoning", "manifest-validator"],
+  "artifacts": ["system-manifest.json", "ARCHITECTURE.md"],
+  "governance": ["tap-protocol", "cost-budget"],
+  "next_stage": "build",
+  "workflow_job": "design",
+  "estimated_duration_mins": 10
+}
