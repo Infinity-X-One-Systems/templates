@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "architecture_map.schema.json",
+  "title": "ArchitectureMap",
+  "description": "A snapshot of the system's component topology and health.",
+  "type": "object",
+  "required": ["system_name", "components", "dependency_graph", "last_updated"],
+  "additionalProperties": false,
+  "properties": {
+    "system_name": {
+      "type": "string",
+      "description": "Name of the system this map describes."
+    },
+    "components": {
+      "type": "array",
+      "description": "List of components in the system.",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "path", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Unique component name."
+          },
+          "type": {
+            "type": "string",
+            "description": "Component type (e.g. service, library, database, frontend)."
+          },
+          "path": {
+            "type": "string",
+            "description": "Relative path to the component within the repository."
+          },
+          "status": {
+            "type": "string",
+            "description": "Current operational status of the component."
+          },
+          "dependencies": {
+            "type": "array",
+            "description": "Names of other components this component depends on.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "health": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100,
+            "description": "Component-level health score (0-100)."
+          }
+        }
+      }
+    },
+    "dependency_graph": {
+      "type": "object",
+      "description": "Adjacency list representing directed dependencies between components.",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "last_updated": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of the last map update."
+    }
+  }
+}

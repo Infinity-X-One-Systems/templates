@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "telemetry.schema.json",
+  "title": "Telemetry",
+  "description": "Time-series telemetry events emitted by workflows and components.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["event_id", "timestamp", "event_type", "component"],
+    "additionalProperties": false,
+    "properties": {
+      "event_id": {
+        "type": "string",
+        "description": "Unique identifier for this event."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO-8601 timestamp when the event occurred."
+      },
+      "event_type": {
+        "type": "string",
+        "enum": ["workflow_run", "test_pass", "test_fail", "deploy", "error", "health_check"],
+        "description": "Category of the telemetry event."
+      },
+      "component": {
+        "type": "string",
+        "description": "Component that emitted this event."
+      },
+      "value": {
+        "type": "number",
+        "description": "Numeric measurement associated with the event."
+      },
+      "unit": {
+        "type": "string",
+        "description": "Unit of the value (e.g. ms, %, count)."
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Arbitrary key-value metadata for additional context.",
+        "additionalProperties": true
+      }
+    }
+  }
+}
