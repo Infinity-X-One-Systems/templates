@@ -1,0 +1,262 @@
+# Infinity Invention Factory — End-to-End Pipeline
+# Triggered by: manifest commit to manifests/, workflow_dispatch, or repository_dispatch
+# Stages: discovery → design → build → test → deploy-sandbox → headless-validate → deploy-production → notify
+name: E2E Invention Factory Pipeline
+
+on:
+  push:
+    paths:
+      - "manifests/**/*.json"
+  workflow_dispatch:
+    inputs:
+      manifest_path:
+        description: "Path to system manifest (e.g. manifests/my-system.json)"
+        required: true
+        default: "manifests/example-ai-platform.json"
+      skip_to_stage:
+        description: "Skip directly to stage (discovery|design|build|test|deploy)"
+        required: false
+        default: "discovery"
+  repository_dispatch:
+    types: [invention-factory-trigger]
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+  pull-requests: write
+  issues: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: e2e-pipeline-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MANIFEST_PATH: ${{ github.event.inputs.manifest_path || 'manifests/example-ai-platform.json' }}
+  PIPELINE_ID: ${{ github.run_id }}
+
+jobs:
+  # STAGE 1: DISCOVERY — Rehydrate memory, validate inputs
+  discovery:
+    name: "📡 Stage 1 — Discovery"
+    runs-on: ubuntu-latest
+    outputs:
+      system_name: ${{ steps.extract.outputs.system_name }}
+      manifest_valid: ${{ steps.validate.outputs.valid }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Rehydrate Memory
+        run: |
+          pip install -q jsonschema pydantic
+          mkdir -p state
+          python memory/scripts/rehydrate.py --state-dir ./state --output context.json || true
+      - name: Validate Manifest
+        id: validate
+        run: |
+          python -c "
+          import json, jsonschema, sys
+          schema = json.load(open('engine/schema/manifest.schema.json'))
+          try:
+              manifest = json.load(open('${{ env.MANIFEST_PATH }}'))
+              jsonschema.validate(manifest, schema)
+              print('valid=true')
+          except Exception as e:
+              print(f'valid=false')
+              print(f'error={e}')
+              sys.exit(1)
+          " >> $GITHUB_OUTPUT
+      - name: Extract System Name
+        id: extract
+        run: |
+          NAME=$(python -c "import json; print(json.load(open('${{ env.MANIFEST_PATH }}'))['system_name'])")
+          echo "system_name=$NAME" >> $GITHUB_OUTPUT
+      - name: Log Discovery to Memory
+        run: |
+          python memory/scripts/log_decision.py \
+            --state-dir ./state \
+            --type process \
+            --description "discovery_complete" \
+            --rationale "Manifest validated for ${{ steps.extract.outputs.system_name }}" \
+            --made-by agent \
+            --outcome success || true
+      - name: Upload Discovery Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-${{ env.PIPELINE_ID }}
+          path: |
+            context.json
+            ${{ env.MANIFEST_PATH }}
+
+  # STAGE 2: DESIGN — Generate architecture map
+  design:
+    name: "🏗️ Stage 2 — Design"
+    needs: discovery
+    if: needs.discovery.outputs.manifest_valid == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download Discovery Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: discovery-${{ env.PIPELINE_ID }}
+      - name: Install Engine Dependencies
+        run: pip install -q jsonschema pydantic
+      - name: Generate System Design
+        run: |
+          python engine/scripts/compose.py \
+            --manifest "${{ env.MANIFEST_PATH }}" \
+            --output /tmp/generated \
+            --dry-run 2>/dev/null || python engine/scripts/compose.py \
+            --manifest "${{ env.MANIFEST_PATH }}" \
+            --output /tmp/generated
+      - name: Generate Architecture Summary
+        run: |
+          python -c "
+          import json
+          manifest = json.load(open('${{ env.MANIFEST_PATH }}'))
+          summary = {
+            'system_name': manifest['system_name'],
+            'components': list(manifest.get('components', {}).keys()),
+            'stage': 'design',
+            'pipeline_id': '${{ env.PIPELINE_ID }}'
+          }
+          json.dump(summary, open('architecture-summary.json', 'w'), indent=2)
+          print(json.dumps(summary, indent=2))
+          "
+      - name: Upload Design Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: design-${{ env.PIPELINE_ID }}
+          path: architecture-summary.json
+
+  # STAGE 3: BUILD & TEST — Run all tests
+  build-and-test:
+    name: "🔨 Stage 3+4 — Build & Test"
+    needs: design
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Core Dependencies
+        run: |
+          pip install -q pydantic==2.10.4 pytest==8.3.4 pytest-asyncio==0.24.0 \
+            httpx==0.28.1 respx==0.22.0 jsonschema==4.23.0
+      - name: Run Engine Tests
+        run: cd engine && python -m pytest tests/ -q
+      - name: Run Agent System Tests
+        run: cd agent-system/base && python -m pytest tests/ -q
+      - name: Run Pipeline Tests
+        run: cd pipelines && python -m pytest tests/ -q
+      - name: Run Memory Tests
+        run: cd memory && python -m pytest tests/ -q
+      - name: Run Connector Tests
+        run: |
+          cd connectors/openai && python -m pytest tests/ -q
+          cd ../../connectors/ollama && python -m pytest tests/ -q
+          cd ../../connectors/webhooks && python -m pytest tests/ -q
+      - name: Run Experimental Tests
+        run: |
+          cd experimental/human-ai-codriver && python -m pytest tests/ -q
+          cd ../../experimental/self-improving-agent && python -m pytest tests/ -q
+          cd ../../experimental/collective-intelligence && python -m pytest tests/ -q
+      - name: Test Summary
+        run: echo "✅ All template tests passed"
+
+  # STAGE 5: DEPLOY SANDBOX — Upload scaffold as artifact (acts as sandbox)
+  deploy-sandbox:
+    name: "🧪 Stage 5 — Deploy Sandbox"
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Engine
+        run: pip install -q jsonschema pydantic
+      - name: Scaffold System
+        run: |
+          python engine/scripts/compose.py \
+            --manifest "${{ env.MANIFEST_PATH }}" \
+            --output /tmp/sandbox-system
+          echo "Scaffolded to /tmp/sandbox-system"
+          ls /tmp/sandbox-system/ || true
+      - name: Package Scaffold
+        run: |
+          cd /tmp && tar -czf sandbox-system.tar.gz sandbox-system/
+      - name: Upload Sandbox Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandbox-system-${{ env.PIPELINE_ID }}
+          path: /tmp/sandbox-system.tar.gz
+          retention-days: 7
+
+  # STAGE 6: NOTIFY & LOG
+  notify:
+    name: "📢 Stage 6 — Notify & Log"
+    needs: [deploy-sandbox]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Determine Status
+        id: status
+        run: |
+          if [ "${{ needs.deploy-sandbox.result }}" == "success" ]; then
+            echo "status=✅ SUCCESS" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ FAILED" >> $GITHUB_OUTPUT
+          fi
+      - name: Install Memory Deps
+        run: pip install -q pydantic jsonschema
+      - name: Write Pipeline Result to Memory
+        run: |
+          mkdir -p state
+          python memory/scripts/log_decision.py \
+            --state-dir ./state \
+            --type process \
+            --description "pipeline_complete" \
+            --rationale "Pipeline ${{ env.PIPELINE_ID }} finished: ${{ steps.status.outputs.status }}" \
+            --made-by agent \
+            --outcome "${{ needs.deploy-sandbox.result }}" || true
+      - name: Write Step Summary
+        run: |
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## 🏭 Invention Factory Pipeline Complete
+          
+          | Stage | Status |
+          |-------|--------|
+          | 📡 Discovery | ${{ needs.discovery.result || 'skipped' }} |
+          | 🏗️ Design | ${{ needs.design.result || 'skipped' }} |
+          | 🔨 Build & Test | ${{ needs.build-and-test.result || 'skipped' }} |
+          | 🧪 Deploy Sandbox | ${{ needs.deploy-sandbox.result || 'skipped' }} |
+          
+          **System**: `${{ needs.discovery.outputs.system_name || 'unknown' }}`
+          **Pipeline ID**: `${{ env.PIPELINE_ID }}`
+          **Overall Status**: ${{ steps.status.outputs.status }}
+          EOF
+      - name: Open Issue on Failure
+        if: needs.deploy-sandbox.result == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "❌ E2E Pipeline Failed — Run ${{ env.PIPELINE_ID }}" \
+            --body "Pipeline failed at stage. See run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+            --label "bug,guardian" || true
