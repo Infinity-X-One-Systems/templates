@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
@@ -104,7 +104,7 @@ class EnterpriseWorkflowEngine:
             inst.current_step += 1
             if inst.current_step >= len(wf.steps):
                 inst.status = "complete"
-                inst.completed_at = datetime.utcnow()
+                inst.completed_at = datetime.now(timezone.utc)
         self._instances[instance_id] = inst
         return inst
 

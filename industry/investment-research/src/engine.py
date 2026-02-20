@@ -1,6 +1,6 @@
 from __future__ import annotations
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
@@ -66,10 +66,10 @@ class InvestmentResearchEngine:
             "old_target": note.target_price,
             "new_target": new_target,
             "rationale": rationale,
-            "updated_at": datetime.utcnow().isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         })
         note.target_price = new_target
-        note.updated_at = datetime.utcnow()
+        note.updated_at = datetime.now(timezone.utc)
         self._notes[note_id] = note
         return note
 
