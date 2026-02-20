@@ -1,0 +1,16 @@
+{
+  "category": "memory",
+  "description": "Memory backends and strategies for agent persistence.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "in-process", "description": "In-memory dict, resets per session"},
+    {"name": "redis-kv", "description": "Redis key-value store, TTL configurable"},
+    {"name": "json-file", "description": "JSON file in repo (system_state.json pattern)"},
+    {"name": "vector-semantic", "description": "Semantic search via embeddings"},
+    {"name": "postgres-relational", "description": "Structured relational memory in PostgreSQL"},
+    {"name": "github-repo", "description": "Commit memory artifacts back to GitHub repo"},
+    {"name": "google-drive", "description": "Archive memory snapshots to Google Drive"},
+    {"name": "decision-log", "description": "Append-only decision_log.json"},
+    {"name": "telemetry-stream", "description": "Real-time telemetry via telemetry.json"}
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "category": "governance",
+  "description": "Governance rules that constrain agent behavior.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "tap-protocol", "description": "TAP: Policy > Authority > Truth enforcement"},
+    {"name": "cost-budget", "description": "Hard cost ceiling per task (e.g. $0.50)", "config_schema": {"max_usd": {"type": "number"}}},
+    {"name": "rate-limit", "description": "Max API calls per minute"},
+    {"name": "sandbox-first", "description": "All deployments go to sandbox before production"},
+    {"name": "human-approval", "description": "Require human sign-off before irreversible actions"},
+    {"name": "secret-guard", "description": "Block any action that would expose secrets"},
+    {"name": "audit-log", "description": "Log every agent action to immutable audit trail"},
+    {"name": "rollback-ready", "description": "Every deployment must have a rollback plan"},
+    {"name": "bounded-autonomy", "description": "Agent must stop and escalate at defined boundaries"}
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "category": "knowledge",
+  "description": "Domain knowledge bases the agent can reference.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "real-estate", "description": "Real estate markets, valuations, contracts, distress signals"},
+    {"name": "financial-markets", "description": "Stocks, bonds, options, crypto, macro economics"},
+    {"name": "construction", "description": "Construction workflows, materials, permits, project management"},
+    {"name": "healthcare-admin", "description": "Medical billing, scheduling, HIPAA compliance"},
+    {"name": "legal", "description": "Contract law, IP, corporate structure, compliance"},
+    {"name": "saas-metrics", "description": "SaaS KPIs: MRR, churn, LTV, CAC, NRR"},
+    {"name": "software-engineering", "description": "System design, algorithms, design patterns"},
+    {"name": "marketing", "description": "Growth loops, funnel optimization, paid/organic channels"},
+    {"name": "enterprise-sales", "description": "B2B sales cycles, MEDDIC, negotiation"},
+    {"name": "product-management", "description": "Roadmapping, prioritization, PRD writing"},
+    {"name": "logistics", "description": "Supply chain, last-mile, routing, freight"},
+    {"name": "ai-ml", "description": "ML algorithms, model evaluation, MLOps, LLM patterns"}
+  ]
+}

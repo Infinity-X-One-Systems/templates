@@ -1,0 +1,17 @@
+{
+  "category": "upgrades",
+  "description": "Runtime capability upgrades that enhance agent performance dynamically.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "streaming-output", "description": "Stream tokens as they are generated", "config_schema": {}},
+    {"name": "function-calling", "description": "Enable tool/function calling via structured JSON", "config_schema": {"tools": {"type": "array"}}},
+    {"name": "vision", "description": "Accept and analyze image inputs", "config_schema": {}},
+    {"name": "code-interpreter", "description": "Execute Python in a sandboxed environment", "config_schema": {}},
+    {"name": "web-search", "description": "Search the web for real-time information", "config_schema": {"max_results": {"type": "integer", "default": 5}}},
+    {"name": "file-io", "description": "Read and write files in the workspace", "config_schema": {}},
+    {"name": "memory-long-term", "description": "Persistent vector memory across sessions", "config_schema": {"backend": {"type": "string", "default": "redis"}}},
+    {"name": "self-reflection", "description": "Agent reviews its own output quality before returning", "config_schema": {}},
+    {"name": "multi-modal", "description": "Process text, images, audio, and documents", "config_schema": {}},
+    {"name": "autonomous-loop", "description": "Run indefinitely until goal is achieved or budget exceeded", "config_schema": {"max_iterations": {"type": "integer", "default": 10}}}
+  ]
+}

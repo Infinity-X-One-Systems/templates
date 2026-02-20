@@ -1,0 +1,22 @@
+{
+  "category": "skills",
+  "description": "Executable skills that agents can invoke as named functions.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "code-generation", "description": "Generate production-ready code in any language"},
+    {"name": "data-analysis", "description": "Analyze datasets, compute statistics, detect patterns"},
+    {"name": "market-research", "description": "Research markets, competitors, trends"},
+    {"name": "document-writing", "description": "Write reports, proposals, documentation"},
+    {"name": "email-drafting", "description": "Draft professional emails with tone control"},
+    {"name": "scheduling", "description": "Plan and schedule tasks on calendars"},
+    {"name": "financial-modeling", "description": "Build financial models, forecasts, DCF"},
+    {"name": "ui-design", "description": "Design UI layouts, components, style systems"},
+    {"name": "api-integration", "description": "Integrate with third-party APIs"},
+    {"name": "testing", "description": "Write and run automated tests"},
+    {"name": "debugging", "description": "Analyze errors, suggest and apply fixes"},
+    {"name": "seo-optimization", "description": "Optimize content for search engines"},
+    {"name": "social-media", "description": "Create and schedule social media content"},
+    {"name": "lead-scoring", "description": "Score and qualify sales leads"},
+    {"name": "contract-review", "description": "Review contracts for risks and issues"}
+  ]
+}

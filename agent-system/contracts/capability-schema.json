@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinityxai.com/schemas/capability-manifest.json",
+  "title": "Capability Manifest Schema",
+  "type": "object",
+  "required": ["category", "description", "version", "capabilities"],
+  "properties": {
+    "category": {"type": "string"},
+    "description": {"type": "string"},
+    "version": {"type": "string"},
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "properties": {
+          "name": {"type": "string"},
+          "description": {"type": "string"},
+          "config_schema": {"type": "object"},
+          "bundle": {"type": "object"}
+        }
+      }
+    }
+  }
+}

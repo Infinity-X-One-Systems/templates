@@ -1,0 +1,19 @@
+{
+  "category": "tools",
+  "description": "Pluggable tool interfaces the agent can call.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "openai-llm", "description": "OpenAI GPT-4/o1 inference"},
+    {"name": "ollama-llm", "description": "Local Ollama LLM inference"},
+    {"name": "groq-llm", "description": "Groq ultra-fast inference"},
+    {"name": "gemini-llm", "description": "Google Gemini inference"},
+    {"name": "github-api", "description": "GitHub REST/GraphQL API"},
+    {"name": "google-workspace", "description": "Gmail, Sheets, Docs, Drive APIs"},
+    {"name": "cloudflare-api", "description": "Cloudflare Workers, Pages, D1"},
+    {"name": "web-scraper", "description": "Rate-limited async web scraper"},
+    {"name": "vector-db", "description": "Vector database for semantic search"},
+    {"name": "sql-db", "description": "SQL database query and mutation"},
+    {"name": "redis-cache", "description": "Redis key-value cache"},
+    {"name": "mcp-gateway", "description": "Model Context Protocol gateway"}
+  ]
+}

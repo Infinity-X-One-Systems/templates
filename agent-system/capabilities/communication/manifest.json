@@ -1,0 +1,18 @@
+{
+  "category": "communication",
+  "description": "How the agent communicates results and coordinates with others.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "slack-notify", "description": "Send Slack messages with blocks and attachments"},
+    {"name": "email-smtp", "description": "Send emails via SMTP"},
+    {"name": "github-issue", "description": "Create/update GitHub issues"},
+    {"name": "github-pr", "description": "Open pull requests with generated code"},
+    {"name": "google-docs-report", "description": "Generate Google Docs reports"},
+    {"name": "google-sheets-log", "description": "Log structured data to Google Sheets"},
+    {"name": "webhook-outbound", "description": "POST results to any webhook URL"},
+    {"name": "repository-dispatch", "description": "Trigger GitHub repository_dispatch events"},
+    {"name": "discord-notify", "description": "Send Discord messages"},
+    {"name": "dashboard-update", "description": "Update the Infinity Control Plane dashboard"},
+    {"name": "memory-write", "description": "Persist decisions and telemetry to memory system"}
+  ]
+}
