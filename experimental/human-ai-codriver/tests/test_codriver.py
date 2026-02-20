@@ -23,7 +23,7 @@ def test_set_intent():
 def test_ai_propose_low_risk():
     """Low-risk, reversible proposal does not require approval."""
     driver = HumanAICoDriver()
-    driver.set_intent(goal="Optimise query")
+    driver.set_intent(goal="Optimize query")
     proposal = driver.ai_propose(
         action="Add database index",
         rationale="Speeds up queries by 10x",

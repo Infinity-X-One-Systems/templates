@@ -95,7 +95,15 @@ class SelfImprovingAgent:
         return [proposal]
 
     def apply_improvement(self, proposal_id: str, new_prompt: str | None = None) -> AgentVersion:
-        """Apply an approved improvement, creating a new version."""
+        """Apply an approved improvement, creating a new version.
+
+        Args:
+            proposal_id: ID of the proposal to apply.
+            new_prompt: Updated system prompt to use in the new version.
+                        If omitted, the current prompt is carried forward unchanged.
+                        Provide a new prompt when the proposal targets the 'prompt' area;
+                        for strategy-only changes the existing prompt is typically sufficient.
+        """
         proposal = next((p for p in self.proposals if p.proposal_id == proposal_id), None)
         if not proposal:
             raise ValueError(f"Proposal {proposal_id} not found")

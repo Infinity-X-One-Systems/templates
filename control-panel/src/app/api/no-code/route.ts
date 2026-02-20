@@ -20,6 +20,7 @@ interface NoCodeRequest {
   params?: Record<string, unknown>;
 }
 
+// NOTE: counts are manually maintained — update when adding/removing templates in each category.
 const TEMPLATE_CATEGORIES = [
   { id: "core", name: "Core Primitives", count: 2, description: "FastAPI + Next.js PWA foundations" },
   { id: "ai", name: "AI Agents", count: 6, description: "Research, Builder, Financial, Real Estate, Orchestrator, Validator" },
