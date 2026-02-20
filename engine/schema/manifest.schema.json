@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinityxai.com/schemas/system-manifest.schema.json",
+  "title": "Infinity System Manifest",
+  "description": "Agent-readable manifest for composing a full production system from the template library.",
+  "type": "object",
+  "required": ["manifest_version", "system_name", "org", "components"],
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "Manifest schema version."
+    },
+    "system_name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{2,63}$",
+      "description": "Unique system name (kebab-case)."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500
+    },
+    "org": {
+      "type": "string",
+      "description": "GitHub organization or user owning generated repos."
+    },
+    "version": {
+      "type": "string",
+      "default": "0.1.0"
+    },
+    "components": {
+      "type": "object",
+      "description": "Selected template modules to compose.",
+      "properties": {
+        "backend": {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "enum": ["fastapi", "express", "graphql", "websocket", "ai-inference", "event-worker"],
+              "description": "Backend template to use."
+            },
+            "config": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "frontend": {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "enum": ["nextjs-pwa", "vite-react", "dashboard", "admin-panel", "saas-landing", "ai-console", "chat-ui"],
+              "description": "Frontend template to use."
+            },
+            "pwa": { "type": "boolean", "default": true },
+            "config": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "ai_agents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["template"],
+            "properties": {
+              "template": {
+                "type": "string",
+                "enum": ["research", "builder", "validator", "financial", "real-estate", "orchestrator", "content-gen", "social-automation"]
+              },
+              "instance_name": { "type": "string" },
+              "config": { "type": "object", "additionalProperties": true }
+            }
+          }
+        },
+        "business": {
+          "type": "object",
+          "properties": {
+            "template": {
+              "type": "string",
+              "enum": ["crm", "lead-gen", "billing", "saas-subscription", "marketplace", "portfolio-mgmt"]
+            },
+            "config": { "type": "object", "additionalProperties": true }
+          }
+        },
+        "infrastructure": {
+          "type": "object",
+          "properties": {
+            "docker": { "type": "boolean", "default": true },
+            "kubernetes": { "type": "boolean", "default": false },
+            "github_actions": { "type": "boolean", "default": true },
+            "github_pages": { "type": "boolean", "default": false },
+            "github_projects": { "type": "boolean", "default": true },
+            "observability": { "type": "boolean", "default": false },
+            "gitops": { "type": "boolean", "default": false }
+          }
+        },
+        "governance": {
+          "type": "object",
+          "properties": {
+            "tap_enforcement": { "type": "boolean", "default": true },
+            "test_coverage_gate": { "type": "boolean", "default": true },
+            "security_scan": { "type": "boolean", "default": true },
+            "signed_commits": { "type": "boolean", "default": false },
+            "memory_consistency": { "type": "boolean", "default": true }
+          }
+        }
+      }
+    },
+    "memory": {
+      "type": "object",
+      "description": "Memory interface configuration for AI agents.",
+      "properties": {
+        "backend": { "type": "string", "enum": ["in-memory", "redis", "postgres"], "default": "in-memory" },
+        "ttl_seconds": { "type": "integer", "minimum": 60, "default": 3600 },
+        "max_facts": { "type": "integer", "minimum": 10, "default": 100 }
+      }
+    },
+    "integrations": {
+      "type": "object",
+      "description": "External integrations for mobile/web app access.",
+      "properties": {
+        "mobile_api": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable REST API bridge for Copilot/ChatGPT/Gemini mobile apps."
+        },
+        "openai_compatible": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expose OpenAI-compatible /v1/chat/completions endpoint."
+        },
+        "webhook_dispatch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable GitHub repository_dispatch webhook."
+        },
+        "cors_origins": {
+          "type": "array",
+          "items": { "type": "string", "format": "uri" },
+          "default": ["https://infinityxai.com", "https://vizual-x.com"]
+        }
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "created_by": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  },
+  "additionalProperties": false
+}
