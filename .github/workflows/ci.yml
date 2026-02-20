@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        agent: [research-agent, builder-agent, financial-agent, real-estate-agent, orchestrator]
+        agent: [research-agent, builder-agent, financial-agent, real-estate-agent, orchestrator, validator-agent]
     defaults:
       run:
         working-directory: ai/${{ matrix.agent }}
@@ -61,6 +61,39 @@ jobs:
       - run: pip install -r requirements.txt -r requirements-dev.txt
       - run: pytest -q
 
+  # ── Business Module Tests ───────────────────────────────────────────────────
+  business:
+    name: Business Module Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: business/crm-automation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic==2.10.4 pytest==8.3.4 pytest-asyncio==0.24.0
+      - run: pytest -q
+
+  # ── Industry Module Tests ───────────────────────────────────────────────────
+  industry:
+    name: Industry Module Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [financial-trading, seo-automation, investor-dashboard]
+    defaults:
+      run:
+        working-directory: industry/${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic==2.10.4 pytest==8.3.4 pytest-asyncio==0.24.0
+      - run: pytest -q
+
   # ── Manifest Schema Validation ──────────────────────────────────────────────
   manifest-validation:
     name: Validate Example Manifests
@@ -71,25 +104,44 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install jsonschema==4.23.0
-      - name: Validate example manifest
+      - name: Validate example manifests
         run: |
           python -c "
           import json, jsonschema
           with open('engine/schema/manifest.schema.json') as sf:
               schema = json.load(sf)
-          with open('engine/schema/system-manifest.example.json') as mf:
-              manifest = json.load(mf)
-          jsonschema.validate(manifest, schema)
-          print('Example manifest schema validation: PASSED')
+          for manifest_file in ['engine/schema/system-manifest.example.json', 'manifests/example-ai-platform.json']:
+              with open(manifest_file) as mf:
+                  manifest = json.load(mf)
+              jsonschema.validate(manifest, schema)
+              print(f'{manifest_file}: VALID')
           "
+
+  # ── Composition Engine Integration ──────────────────────────────────────────
+  engine-integration:
+    name: Composition Engine Integration Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install jsonschema==4.23.0
+      - name: Run composition engine dry-run
+        run: |
+          python engine/scripts/compose.py \
+            --manifest manifests/example-ai-platform.json \
+            --output /tmp/test-output \
+            --dry-run
 
   # ── Docker Build Checks ─────────────────────────────────────────────────────
   docker-build:
     name: Docker Build Check
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        context: [core/api-fastapi, ai/research-agent, ai/validator-agent]
     steps:
       - uses: actions/checkout@v4
-      - name: Build FastAPI Docker image
-        run: docker build -t test-fastapi core/api-fastapi
-      - name: Build Research Agent Docker image
-        run: docker build -t test-research-agent ai/research-agent
+      - name: Build Docker image
+        run: docker build -t test-build:ci ${{ matrix.context }}
