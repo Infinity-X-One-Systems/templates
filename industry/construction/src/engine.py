@@ -74,7 +74,7 @@ class ConstructionWorkflowEngine:
         completed_pct = sum(
             m.budget_pct for m in project.milestones if m.status == "complete"
         )
-        planned = project.budget * (completed_pct / 100.0) if project.milestones else project.budget
+        planned = project.budget * (completed_pct / 100.0) if project.milestones else 0.0
         actual = project.actual_spend
         variance_pct = ((actual - planned) / planned * 100.0) if planned else 0.0
         return BudgetVariance(

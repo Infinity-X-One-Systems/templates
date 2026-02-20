@@ -12,7 +12,7 @@ class Appointment(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     patient_id: str
     provider_id: str
-    datetime_str: str
+    scheduled_at: str
     type: str
     duration_mins: int = 30
     status: str = "scheduled"
@@ -47,7 +47,7 @@ class HealthcareAdminEngine:
         appt = Appointment(
             patient_id=patient_id,
             provider_id=provider_id,
-            datetime_str=datetime_str,
+            scheduled_at=datetime_str,
             type=type,
             duration_mins=duration_mins,
         )
@@ -58,7 +58,7 @@ class HealthcareAdminEngine:
         return [
             a
             for a in self._appointments.values()
-            if a.provider_id == provider_id and a.datetime_str.startswith(date_str)
+            if a.provider_id == provider_id and a.scheduled_at.startswith(date_str)
         ]
 
     def check_appointment_conflict(
@@ -69,7 +69,7 @@ class HealthcareAdminEngine:
         for appt in self._appointments.values():
             if appt.provider_id != provider_id or appt.status == "cancelled":
                 continue
-            existing_start = datetime.fromisoformat(appt.datetime_str)
+            existing_start = datetime.fromisoformat(appt.scheduled_at)
             existing_end = existing_start + timedelta(minutes=appt.duration_mins)
             if new_start < existing_end and new_end > existing_start:
                 return True
@@ -101,4 +101,4 @@ class HealthcareAdminEngine:
 if __name__ == "__main__":
     engine = HealthcareAdminEngine()
     appt = engine.schedule_appointment("P001", "DR001", "2025-06-01T09:00", "checkup")
-    print(f"Appointment scheduled: {appt.id}")
+    print(f"Appointment scheduled: {appt.id} at {appt.scheduled_at}")
