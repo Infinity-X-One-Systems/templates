@@ -1,0 +1,14 @@
+{
+  "stage": "optimize",
+  "order": 7,
+  "description": "Analyze telemetry and apply optimizations autonomously.",
+  "trigger": "monitor_alert | schedule(0 * * * *)",
+  "inputs": ["telemetry.json", "health_report", "cost_report"],
+  "outputs": ["optimization_pr", "updated_manifest", "cost_reduction_report"],
+  "tools": ["guardian-system", "llm-reasoning", "github-pr"],
+  "artifacts": ["optimization_report.md", "updated_manifest.json"],
+  "governance": ["bounded-autonomy", "human-approval", "rollback-ready"],
+  "next_stage": "scale",
+  "workflow_job": "optimize",
+  "estimated_duration_mins": 20
+}

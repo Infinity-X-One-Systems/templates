@@ -1,0 +1,136 @@
+name: Scaffold System on Manifest Commit
+
+on:
+  push:
+    paths:
+      - 'manifests/**/*.json'
+  repository_dispatch:
+    types: [scaffold-system]
+  workflow_dispatch:
+    inputs:
+      manifest_path:
+        description: 'Path to system manifest JSON'
+        required: true
+        default: 'manifests/my-system.json'
+      output_org:
+        description: 'Target GitHub org/user for new repo'
+        required: false
+        default: 'Infinity-X-One-Systems'
+      dry_run:
+        description: 'Dry run (validate only, no files written)'
+        type: boolean
+        default: false
+
+# Default minimal permissions
+permissions:
+  contents: read
+
+jobs:
+  validate-manifest:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      system_name: ${{ steps.parse.outputs.system_name }}
+      manifest_valid: ${{ steps.validate.outputs.valid }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine manifest path
+        id: manifest_path
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'manifests/**/*.json' | head -1)
+            echo "path=${CHANGED}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "path=${{ github.event.client_payload.manifest_path }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=${{ inputs.manifest_path }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install validation dependencies
+        run: pip install jsonschema==4.23.0
+
+      - name: Parse and validate manifest
+        id: parse
+        run: |
+          python -c "
+          import json, sys
+          path = '${{ steps.manifest_path.outputs.path }}'
+          with open(path) as f:
+              m = json.load(f)
+          print(f'system_name={m[\"system_name\"]}')
+          " >> "$GITHUB_OUTPUT"
+
+      - name: Schema validation
+        id: validate
+        run: |
+          python -c "
+          import json
+          import jsonschema
+          with open('engine/schema/manifest.schema.json') as sf:
+              schema = json.load(sf)
+          with open('${{ steps.manifest_path.outputs.path }}') as mf:
+              manifest = json.load(mf)
+          jsonschema.validate(manifest, schema)
+          print('Manifest is valid')
+          "
+          echo "valid=true" >> "$GITHUB_OUTPUT"
+
+  scaffold:
+    needs: validate-manifest
+    if: needs.validate-manifest.outputs.manifest_valid == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Determine manifest path
+        id: manifest_path
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            CHANGED=$(git diff --name-only HEAD~1 HEAD -- 'manifests/**/*.json' | head -1)
+            echo "path=${CHANGED}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            echo "path=${{ github.event.client_payload.manifest_path }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=${{ inputs.manifest_path }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run composition engine
+        run: |
+          python engine/scripts/compose.py \
+            --manifest "${{ steps.manifest_path.outputs.path }}" \
+            --output /tmp/generated \
+            --template-root . \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Upload generated scaffold
+        if: ${{ !inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: scaffold-${{ needs.validate-manifest.outputs.system_name }}
+          path: /tmp/generated/
+          retention-days: 7
+
+  notify:
+    needs: [validate-manifest, scaffold]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Summary
+        run: |
+          echo "## Scaffold Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- System: ${{ needs.validate-manifest.outputs.system_name }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Status: ${{ needs.scaffold.result }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Triggered by: ${{ github.event_name }}" >> "$GITHUB_STEP_SUMMARY"

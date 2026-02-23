@@ -1,0 +1,17 @@
+{
+  "category": "accessibility",
+  "description": "How the agent can be accessed and invoked.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "rest-api", "description": "Expose agent via REST API endpoint"},
+    {"name": "openai-compatible", "description": "OpenAI-compatible /v1/chat/completions interface"},
+    {"name": "websocket", "description": "Real-time bidirectional WebSocket interface"},
+    {"name": "cli", "description": "Invoke agent from command line"},
+    {"name": "webhook", "description": "Trigger agent via incoming webhooks"},
+    {"name": "github-actions", "description": "Invoke as a GitHub Actions step"},
+    {"name": "scheduled", "description": "Run on cron schedule"},
+    {"name": "event-driven", "description": "Trigger on queue/event bus messages"},
+    {"name": "mobile-api", "description": "Mobile-optimized REST API with JWT auth"},
+    {"name": "no-code-ui", "description": "Accessible via no-code control panel without writing code"}
+  ]
+}

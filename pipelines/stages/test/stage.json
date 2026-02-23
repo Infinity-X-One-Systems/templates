@@ -1,0 +1,14 @@
+{
+  "stage": "test",
+  "order": 4,
+  "description": "Run all tests, linting, type checks, and security scans.",
+  "trigger": "build_complete",
+  "inputs": ["generated_repo"],
+  "outputs": ["test_report", "coverage_report", "security_report"],
+  "tools": ["pytest", "eslint", "codeql", "trivy"],
+  "artifacts": ["test-results.xml", "coverage.xml", "security-report.json"],
+  "governance": ["test-coverage-gate", "security-scan-gate"],
+  "next_stage": "deploy",
+  "workflow_job": "test",
+  "estimated_duration_mins": 15
+}

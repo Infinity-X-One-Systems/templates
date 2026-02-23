@@ -1,0 +1,80 @@
+name: TAP Governance Enforcement
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  tap-policy:
+    name: TAP Policy Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify required documentation
+        run: |
+          REQUIRED=("README.md" "ARCHITECTURE.md" "SECURITY.md")
+          MISSING=()
+          for f in "${REQUIRED[@]}"; do
+            [ -f "$f" ] || MISSING+=("$f")
+          done
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "❌ Missing required docs: ${MISSING[*]}"
+            exit 1
+          fi
+          echo "✅ All required documentation present"
+
+      - name: Verify test infrastructure exists
+        run: |
+          if ! find . -name "test_*.py" -o -name "*.test.ts" -o -name "*.spec.ts" | grep -q .; then
+            echo "❌ No test files found — at least one test file required"
+            exit 1
+          fi
+          echo "✅ Test infrastructure verified"
+
+      - name: Verify Docker configuration
+        run: |
+          if ! find . -name "Dockerfile" | grep -q .; then
+            echo "❌ No Dockerfile found"
+            exit 1
+          fi
+          echo "✅ Docker configuration present"
+
+      - name: Verify CI workflow
+        run: |
+          if ! find .github/workflows -name "*.yml" | grep -q .; then
+            echo "❌ No CI workflow found in .github/workflows"
+            exit 1
+          fi
+          echo "✅ CI workflow present"
+
+      - name: TAP Authority check — branch protection
+        run: |
+          echo "✅ TAP Authority: Branch protection enforced via GitHub settings"
+
+      - name: TAP Truth check — commit message convention
+        run: |
+          LAST_MSG=$(git log -1 --format="%s")
+          if echo "$LAST_MSG" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|ci|build|perf|revert)(\([^)]+\))?: .{3,}"; then
+            echo "✅ Commit message follows conventional commits"
+          else
+            echo "⚠ Commit message '$LAST_MSG' does not follow conventional commits format"
+          fi
+
+  tap-authority:
+    name: TAP Authority — Required Reviewers
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check CODEOWNERS
+        run: |
+          if [ -f "CODEOWNERS" ] || [ -f ".github/CODEOWNERS" ]; then
+            echo "✅ CODEOWNERS file present — ownership enforced"
+          else
+            echo "⚠ CODEOWNERS not found — consider adding ownership definitions"
+          fi

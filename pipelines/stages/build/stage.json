@@ -1,0 +1,14 @@
+{
+  "stage": "build",
+  "order": 3,
+  "description": "Scaffold and generate all system components from the manifest.",
+  "trigger": "design_complete",
+  "inputs": ["system_manifest", "template_library"],
+  "outputs": ["generated_repo", "docker_images", "api_stubs"],
+  "tools": ["compose-engine", "git-operations", "docker-build"],
+  "artifacts": ["generated_repo.zip", "build_log.json"],
+  "governance": ["sandbox-first", "secret-guard"],
+  "next_stage": "test",
+  "workflow_job": "build",
+  "estimated_duration_mins": 20
+}

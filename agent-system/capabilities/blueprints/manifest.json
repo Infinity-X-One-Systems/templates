@@ -1,0 +1,37 @@
+{
+  "category": "blueprints",
+  "description": "Pre-wired agent configurations (role + capability bundles) ready to deploy.",
+  "version": "1.0.0",
+  "capabilities": [
+    {
+      "name": "research-analyst",
+      "description": "Researches markets, industries, competitors",
+      "bundle": {"skills": ["market-research", "data-analysis"], "knowledge": ["financial-markets"], "capabilities": ["reasoning", "summarization"], "communication": ["google-docs-report"]}
+    },
+    {
+      "name": "code-builder",
+      "description": "Generates, tests, and submits production code",
+      "bundle": {"skills": ["code-generation", "testing", "debugging"], "capabilities": ["planning", "generation"], "communication": ["github-pr"]}
+    },
+    {
+      "name": "sales-qualifier",
+      "description": "Ingests and qualifies inbound leads",
+      "bundle": {"skills": ["lead-scoring", "email-drafting"], "knowledge": ["enterprise-sales"], "capabilities": ["classification", "extraction"], "communication": ["slack-notify", "google-sheets-log"]}
+    },
+    {
+      "name": "content-creator",
+      "description": "Creates SEO-optimized content across channels",
+      "bundle": {"skills": ["document-writing", "seo-optimization", "social-media"], "capabilities": ["generation", "planning"], "communication": ["webhook-outbound"]}
+    },
+    {
+      "name": "financial-analyst",
+      "description": "Models financials and generates investment reports",
+      "bundle": {"skills": ["financial-modeling", "data-analysis"], "knowledge": ["financial-markets", "saas-metrics"], "capabilities": ["reasoning", "simulation", "evaluation"], "communication": ["google-docs-report", "google-sheets-log"]}
+    },
+    {
+      "name": "devops-guardian",
+      "description": "Monitors CI/CD health, auto-heals failures",
+      "bundle": {"capabilities": ["evaluation", "reasoning"], "communication": ["github-issue", "repository-dispatch", "slack-notify"], "accessibility": ["github-actions", "scheduled"]}
+    }
+  ]
+}

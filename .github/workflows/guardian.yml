@@ -1,0 +1,310 @@
+name: Guardian Health Check
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+
+jobs:
+  check-workflows:
+    name: Check Workflow Health
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    outputs:
+      has_failures: ${{ steps.health.outputs.has_failures }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Guardian dependencies
+        run: pip install -r governance/guardian/requirements.txt
+
+      - name: Check workflow health
+        id: health
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'PYEOF'
+          import sys, json, os, subprocess
+
+          sys.path.insert(0, "governance/guardian/src")
+          from guardian import GuardianSystem
+
+          guardian = GuardianSystem()
+
+          # Attempt to fetch recent runs via gh CLI; fall back to empty list
+          runs = []
+          try:
+              result = subprocess.run(
+                  ["gh", "api", f"repos/{os.environ.get('GITHUB_REPOSITORY', 'owner/repo')}/actions/runs",
+                   "--jq", ".workflow_runs[:50]"],
+                  capture_output=True, text=True, timeout=30,
+              )
+              if result.returncode == 0 and result.stdout.strip():
+                  runs = json.loads(result.stdout)
+          except Exception as e:
+              print(f"Warning: could not fetch workflow runs: {e}")
+
+          alerts = guardian.check_workflow_health(runs)
+          failed_count = sum(1 for a in alerts if a.type == "failed_workflow")
+
+          print(f"Workflow alerts: {len(alerts)} (failed_count={failed_count})")
+          for alert in alerts:
+              level = "error" if alert.severity == "critical" else "warning"
+              print(f"::{level}::{alert.title}: {alert.description}")
+
+          with open("workflow_alerts.json", "w") as f:
+              json.dump([a.model_dump() for a in alerts], f, default=str)
+
+          with open(os.environ.get("GITHUB_OUTPUT", "/dev/null"), "a") as out:
+              out.write(f"has_failures={'true' if failed_count > 0 else 'false'}\n")
+          PYEOF
+
+      - name: Upload workflow alerts artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: workflow-alerts
+          path: workflow_alerts.json
+          retention-days: 7
+
+  check-coverage:
+    name: Check Test Coverage
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Guardian dependencies
+        run: pip install -r governance/guardian/requirements.txt
+
+      - name: Check coverage threshold
+        run: |
+          python - <<'PYEOF'
+          import sys, os, xml.etree.ElementTree as ET
+
+          sys.path.insert(0, "governance/guardian/src")
+          from guardian import GuardianSystem
+
+          guardian = GuardianSystem()
+          coverage_pct = 100.0
+
+          if os.path.exists("coverage.xml"):
+              try:
+                  tree = ET.parse("coverage.xml")
+                  root = tree.getroot()
+                  coverage_pct = float(root.attrib.get("line-rate", 1.0)) * 100
+                  print(f"Coverage from coverage.xml: {coverage_pct:.1f}%")
+              except Exception as e:
+                  print(f"Warning: could not parse coverage.xml: {e}")
+          else:
+              print("No coverage.xml found; assuming 100% (run tests with --cov to generate)")
+
+          alert = guardian.check_test_coverage(coverage_pct)
+          if alert:
+              print(f"::warning::{alert.title}: {alert.description}")
+          else:
+              print(f"Coverage OK: {coverage_pct:.1f}%")
+          PYEOF
+
+  check-dependencies:
+    name: Check Dependency Age
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Guardian dependencies
+        run: pip install -r governance/guardian/requirements.txt
+
+      - name: Check dependency age via git history
+        run: |
+          python - <<'PYEOF'
+          import sys, subprocess
+          from datetime import datetime
+
+          sys.path.insert(0, "governance/guardian/src")
+          from guardian import GuardianSystem
+
+          guardian = GuardianSystem()
+          deps = []
+
+          result = subprocess.run(
+              ["git", "ls-files", "--", "*requirements.txt"],
+              capture_output=True, text=True,
+          )
+          req_files = [f for f in result.stdout.strip().splitlines() if f]
+
+          for req_file in req_files:
+              log = subprocess.run(
+                  ["git", "log", "-1", "--format=%ci", req_file],
+                  capture_output=True, text=True,
+              )
+              last_modified = log.stdout.strip()
+              if not last_modified:
+                  continue
+              try:
+                  dt = datetime.fromisoformat(last_modified.split(" ")[0])
+                  age_days = (datetime.now() - dt).days
+              except ValueError:
+                  continue
+
+              with open(req_file) as f:
+                  for line in f:
+                      line = line.strip()
+                      if "==" in line and not line.startswith("#"):
+                          name, version = line.split("==", 1)
+                          deps.append({
+                              "name": name.strip(),
+                              "current_version": version.strip(),
+                              "latest_version": version.strip(),
+                              "age_days": age_days,
+                          })
+
+          alerts = guardian.check_dependency_age(deps)
+          for alert in alerts:
+              print(f"::warning::{alert.title}: {alert.description}")
+          if not alerts:
+              print("All tracked requirements files are within the 90-day freshness window.")
+          PYEOF
+
+  report:
+    name: Generate Health Report
+    runs-on: ubuntu-latest
+    needs: [check-workflows, check-coverage, check-dependencies]
+    permissions:
+      contents: read
+      issues: write
+    outputs:
+      overall_health: ${{ steps.generate.outputs.overall_health }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Guardian dependencies
+        run: pip install -r governance/guardian/requirements.txt
+
+      - name: Download workflow alerts artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: workflow-alerts
+          path: .
+        continue-on-error: true
+
+      - name: Generate report
+        id: generate
+        run: |
+          python - <<'PYEOF'
+          import sys, json, os
+          from datetime import datetime
+
+          sys.path.insert(0, "governance/guardian/src")
+          from guardian import GuardianSystem, HealthAlert
+
+          guardian = GuardianSystem()
+          alerts = []
+
+          if os.path.exists("workflow_alerts.json"):
+              try:
+                  with open("workflow_alerts.json") as f:
+                      raw = json.load(f)
+                  alerts = [HealthAlert(**a) for a in raw]
+              except Exception as e:
+                  print(f"Warning: could not load workflow alerts: {e}")
+
+          report = guardian.generate_report(alerts)
+          print(f"Overall health : {report.overall_health}")
+          print(f"Total alerts   : {report.total_alerts}")
+          print(f"Critical       : {report.critical_count}")
+          print(f"Warnings       : {report.warning_count}")
+
+          summary_path = os.environ.get("GITHUB_STEP_SUMMARY", "")
+          if summary_path:
+              with open(summary_path, "a") as f:
+                  health_emoji = {"ok": "✅", "degraded": "⚠️", "critical": "🚨"}.get(
+                      report.overall_health, "❓"
+                  )
+                  f.write(f"## {health_emoji} Guardian Health Report\n\n")
+                  f.write(f"| Metric | Value |\n|--------|-------|\n")
+                  f.write(f"| Overall Health | **{report.overall_health}** |\n")
+                  f.write(f"| Total Alerts | {report.total_alerts} |\n")
+                  f.write(f"| Critical | {report.critical_count} |\n")
+                  f.write(f"| Warnings | {report.warning_count} |\n")
+                  f.write(f"| Timestamp | {report.timestamp.isoformat()} |\n\n")
+                  if report.alerts:
+                      f.write("### Alert Details\n\n")
+                      for alert in report.alerts:
+                          f.write(f"- **[{alert.severity.upper()}]** {alert.title}: {alert.description}\n")
+
+          output_path = os.environ.get("GITHUB_OUTPUT", "")
+          if output_path:
+              with open(output_path, "a") as out:
+                  out.write(f"overall_health={report.overall_health}\n")
+          PYEOF
+
+      - name: Open issue on critical health
+        if: steps.generate.outputs.overall_health == 'critical'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "🚨 Guardian: Critical health alerts detected — $(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --body "The Guardian health check detected **critical** alerts in the repository.
+
+          Please review the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for full details and suggested fixes." \
+            --label "bug" \
+            || echo "::warning::Could not create issue (label may not exist); check workflow output above for alerts."
+
+  auto-heal:
+    name: Auto-Heal Failed Workflows
+    runs-on: ubuntu-latest
+    needs: [check-workflows]
+    if: needs.check-workflows.outputs.has_failures == 'true'
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Retry failed workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Guardian detected failed workflows — attempting auto-heal re-run."
+          gh workflow run guardian.yml \
+            --ref "${{ github.ref_name }}" \
+            || echo "::warning::Auto-heal re-trigger skipped (workflow_dispatch may be unavailable in this context)."

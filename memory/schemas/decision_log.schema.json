@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "decision_log.schema.json",
+  "title": "DecisionLog",
+  "description": "An append-only log of architectural and operational decisions.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "timestamp", "decision_type", "description", "rationale", "made_by"],
+    "additionalProperties": false,
+    "properties": {
+      "id": {
+        "type": "string",
+        "description": "Unique identifier for this decision."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "ISO-8601 timestamp when the decision was made."
+      },
+      "decision_type": {
+        "type": "string",
+        "description": "Category or type of the decision (e.g. architecture, tooling, process)."
+      },
+      "description": {
+        "type": "string",
+        "description": "What was decided."
+      },
+      "rationale": {
+        "type": "string",
+        "description": "Why this decision was made."
+      },
+      "made_by": {
+        "type": "string",
+        "enum": ["human", "agent"],
+        "description": "Whether the decision was made by a human or an AI agent."
+      },
+      "outcome": {
+        "type": "string",
+        "description": "Observed or expected outcome of the decision."
+      },
+      "related_components": {
+        "type": "array",
+        "description": "Component names affected by this decision.",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

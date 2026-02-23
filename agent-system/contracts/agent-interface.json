@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://infinityxai.com/schemas/agent-interface.json",
+  "title": "Infinity Agent Interface Contract",
+  "description": "Every agent in the Infinity ecosystem must satisfy this interface.",
+  "type": "object",
+  "required": ["agent_id", "name", "role", "capabilities", "status"],
+  "properties": {
+    "agent_id": {"type": "string", "format": "uuid"},
+    "name": {"type": "string"},
+    "role": {"type": "string"},
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["category", "name"],
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": ["upgrades", "skills", "knowledge", "capabilities", "accessibility", "communication", "blueprints", "tools", "memory", "governance"]
+          },
+          "name": {"type": "string"},
+          "version": {"type": "string"},
+          "config": {"type": "object"}
+        }
+      }
+    },
+    "memory": {"type": "array"},
+    "status": {"type": "string", "enum": ["idle", "running", "paused", "error", "complete"]},
+    "iteration": {"type": "integer", "minimum": 0},
+    "metadata": {"type": "object"}
+  }
+}

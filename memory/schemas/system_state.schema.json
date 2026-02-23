@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "system_state.schema.json",
+  "title": "SystemState",
+  "description": "Tracks the current state of the Infinity Template Library system.",
+  "type": "object",
+  "required": ["manifest_version", "system_name", "org", "phase", "last_action", "last_action_at", "health_score"],
+  "additionalProperties": false,
+  "properties": {
+    "manifest_version": {
+      "type": "string",
+      "description": "Schema version of this manifest."
+    },
+    "system_name": {
+      "type": "string",
+      "description": "Name of the system."
+    },
+    "org": {
+      "type": "string",
+      "description": "Organisation or owner of the system."
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["planning", "building", "testing", "deployed"],
+      "description": "Current lifecycle phase of the system."
+    },
+    "components_status": {
+      "type": "object",
+      "description": "Mapping of component name to its status.",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "last_action": {
+      "type": "string",
+      "description": "Human-readable description of the last action taken."
+    },
+    "last_action_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp of the last action."
+    },
+    "health_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Overall system health score (0-100)."
+    },
+    "errors": {
+      "type": "array",
+      "description": "List of current error messages.",
+      "items": {
+        "type": "string"
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "description": "List of current warning messages.",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

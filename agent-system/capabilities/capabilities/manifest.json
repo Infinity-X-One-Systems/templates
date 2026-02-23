@@ -1,0 +1,17 @@
+{
+  "category": "capabilities",
+  "description": "Core computational capabilities that define what an agent CAN do.",
+  "version": "1.0.0",
+  "capabilities": [
+    {"name": "reasoning", "description": "Chain-of-thought, step-by-step logical reasoning"},
+    {"name": "planning", "description": "Break goals into executable task trees"},
+    {"name": "summarization", "description": "Condense long content into structured summaries"},
+    {"name": "classification", "description": "Classify inputs into defined categories"},
+    {"name": "extraction", "description": "Extract structured data from unstructured text"},
+    {"name": "generation", "description": "Generate content: text, code, images, data"},
+    {"name": "evaluation", "description": "Score and evaluate outputs against criteria"},
+    {"name": "translation", "description": "Translate between languages and formats"},
+    {"name": "simulation", "description": "Run what-if scenarios and simulations"},
+    {"name": "orchestration", "description": "Coordinate multiple agents toward a shared goal"}
+  ]
+}

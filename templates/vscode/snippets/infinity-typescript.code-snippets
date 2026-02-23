@@ -1,0 +1,44 @@
+{
+  "Infinity Next.js API Route": {
+    "prefix": "inf-api-route",
+    "body": [
+      "import { NextRequest, NextResponse } from \"next/server\";",
+      "",
+      "export const runtime = \"edge\";",
+      "",
+      "export async function GET() {",
+      "  return NextResponse.json({ status: \"ok\", service: \"${1:service-name}\" });",
+      "}",
+      "",
+      "export async function POST(req: NextRequest) {",
+      "  const body = await req.json() as { ${2:field}: ${3:string} };",
+      "  if (!body.${2:field}) {",
+      "    return NextResponse.json({ error: \"${2:field} is required\" }, { status: 400 });",
+      "  }",
+      "  return NextResponse.json({ result: body.${2:field} });",
+      "}",
+      ""
+    ],
+    "description": "Create an Infinity Next.js API route"
+  },
+  "Infinity React Component": {
+    "prefix": "inf-component",
+    "body": [
+      "\"use client\";",
+      "",
+      "interface ${1:ComponentName}Props {",
+      "  ${2:title}: string;",
+      "}",
+      "",
+      "export function ${1:ComponentName}({ ${2:title} }: ${1:ComponentName}Props) {",
+      "  return (",
+      "    <div className=\"${3:p-4 rounded-lg bg-gray-900 border border-gray-700}\">",
+      "      <h2 className=\"text-lg font-semibold text-white\">{${2:title}}</h2>",
+      "    </div>",
+      "  );",
+      "}",
+      ""
+    ],
+    "description": "Create an Infinity React component"
+  }
+}

@@ -1,0 +1,30 @@
+name: Test Coverage Gate
+
+on:
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  coverage-gate:
+    name: Coverage Threshold Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install coverage tools
+        run: pip install coverage pytest pytest-cov
+
+      - name: Run tests with coverage
+        run: |
+          find . -name "pytest.ini" -o -name "pyproject.toml" | while read cfg_dir; do
+            dir=$(dirname "$cfg_dir")
+            if [ -f "$dir/requirements-dev.txt" ]; then
+              (cd "$dir" && pip install -r requirements-dev.txt && pytest --cov --cov-fail-under=80 -q) || exit 1
+            fi
+          done
+
+      - name: Coverage summary
+        run: echo "✅ All modules meet the 80% coverage threshold"

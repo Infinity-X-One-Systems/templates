@@ -1,0 +1,37 @@
+name: CI — FastAPI Core
+
+on:
+  push:
+    paths:
+      - 'core/api-fastapi/**'
+  pull_request:
+    paths:
+      - 'core/api-fastapi/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: core/api-fastapi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: core/api-fastapi/requirements*.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+      - name: Lint
+        run: |
+          pip install ruff
+          ruff check app/ tests/
+      - name: Type check
+        run: |
+          pip install mypy types-passlib
+          mypy app/ --ignore-missing-imports
+      - name: Test
+        run: pytest --cov=app --cov-report=xml --cov-fail-under=80
+      - name: Build Docker image
+        run: docker build -t infinity-api:ci .

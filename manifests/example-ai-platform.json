@@ -1,0 +1,39 @@
+{
+  "manifest_version": "1.0",
+  "system_name": "example-ai-platform",
+  "description": "Example AI business platform generated from the Infinity Template Library",
+  "org": "Infinity-X-One-Systems",
+  "version": "0.1.0",
+  "components": {
+    "backend": { "template": "fastapi" },
+    "frontend": { "template": "nextjs-pwa", "pwa": true },
+    "ai_agents": [
+      { "template": "research", "instance_name": "market-researcher" },
+      { "template": "orchestrator", "instance_name": "workflow-engine" }
+    ],
+    "business": { "template": "crm" },
+    "infrastructure": {
+      "docker": true,
+      "github_actions": true,
+      "github_projects": true,
+      "github_pages": false
+    },
+    "governance": {
+      "tap_enforcement": true,
+      "test_coverage_gate": true,
+      "security_scan": true
+    }
+  },
+  "memory": { "backend": "redis", "ttl_seconds": 3600, "max_facts": 100 },
+  "integrations": {
+    "mobile_api": true,
+    "openai_compatible": true,
+    "webhook_dispatch": true,
+    "cors_origins": ["https://infinityxai.com", "https://vizual-x.com"]
+  },
+  "metadata": {
+    "created_by": "infinity-orchestrator",
+    "created_at": "2026-02-20T04:00:00Z",
+    "tags": ["ai", "business", "crm"]
+  }
+}

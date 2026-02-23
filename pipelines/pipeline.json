@@ -1,0 +1,10 @@
+{
+  "pipeline_id": "universal-business-pipeline",
+  "version": "1.0.0",
+  "description": "Universal 8-stage pipeline for any business or system.",
+  "stages": ["discovery", "design", "build", "test", "deploy", "monitor", "optimize", "scale"],
+  "entry_point": "discovery",
+  "memory_required": ["system_state.json", "decision_log.json", "telemetry.json"],
+  "governance": ["tap-protocol", "bounded-autonomy"],
+  "compatible_with": ["invention-factory", "infinity-admin-control-plane", "github-actions"]
+}

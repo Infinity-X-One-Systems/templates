@@ -1,0 +1,14 @@
+{
+  "stage": "deploy",
+  "order": 5,
+  "description": "Deploy to sandbox, validate, then promote to production.",
+  "trigger": "test_complete",
+  "inputs": ["generated_repo", "test_report", "security_report"],
+  "outputs": ["sandbox_url", "production_url", "deployment_log"],
+  "tools": ["docker-compose", "github-pages", "cloudflare-workers"],
+  "artifacts": ["deployment_manifest.json", "rollback_plan.json"],
+  "governance": ["sandbox-first", "human-approval", "rollback-ready"],
+  "next_stage": "monitor",
+  "workflow_job": "deploy",
+  "estimated_duration_mins": 10
+}

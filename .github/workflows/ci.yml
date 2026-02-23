@@ -1,0 +1,248 @@
+name: CI — Infinity Template Library
+
+on:
+  push:
+    branches: [main, "copilot/**"]
+  pull_request:
+    branches: [main]
+
+# Default minimal permissions for the GITHUB_TOKEN
+permissions:
+  contents: read
+
+jobs:
+  # ── Engine Tests ────────────────────────────────────────────────────────────
+  engine:
+    name: Composition Engine Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: engine/requirements*.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest --cov=scripts --cov-report=xml -q
+
+  # ── FastAPI Core Tests ──────────────────────────────────────────────────────
+  fastapi-core:
+    name: FastAPI Core Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: core/api-fastapi
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: core/api-fastapi/requirements*.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest --cov=app --cov-report=xml -q
+
+  # ── AI Agent Tests ──────────────────────────────────────────────────────────
+  ai-agents:
+    name: AI Agent Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        agent: [research-agent, builder-agent, financial-agent, real-estate-agent, orchestrator, validator-agent]
+    defaults:
+      run:
+        working-directory: ai/${{ matrix.agent }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: ai/${{ matrix.agent }}/requirements*.txt
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
+
+  # ── Business Module Tests ───────────────────────────────────────────────────
+  business:
+    name: Business Module Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: business/crm-automation
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic==2.10.4 pytest==8.3.4 pytest-asyncio==0.24.0
+      - run: pytest -q
+
+  # ── Industry Module Tests ───────────────────────────────────────────────────
+  industry:
+    name: Industry Module Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module: [financial-trading, seo-automation, investor-dashboard]
+    defaults:
+      run:
+        working-directory: industry/${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pydantic==2.10.4 pytest==8.3.4 pytest-asyncio==0.24.0
+      - run: pytest -q
+
+  # ── Manifest Schema Validation ──────────────────────────────────────────────
+  manifest-validation:
+    name: Validate Example Manifests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install jsonschema==4.23.0
+      - name: Validate example manifests
+        run: |
+          python -c "
+          import json, jsonschema
+          with open('engine/schema/manifest.schema.json') as sf:
+              schema = json.load(sf)
+          for manifest_file in ['engine/schema/system-manifest.example.json', 'manifests/example-ai-platform.json']:
+              with open(manifest_file) as mf:
+                  manifest = json.load(mf)
+              jsonschema.validate(manifest, schema)
+              print(f'{manifest_file}: VALID')
+          "
+
+  # ── Composition Engine Integration ──────────────────────────────────────────
+  engine-integration:
+    name: Composition Engine Integration Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install jsonschema==4.23.0
+      - name: Run composition engine dry-run
+        run: |
+          python engine/scripts/compose.py \
+            --manifest manifests/example-ai-platform.json \
+            --output /tmp/test-output \
+            --dry-run
+
+  # ── Docker Build Checks ─────────────────────────────────────────────────────
+  docker-build:
+    name: Docker Build Check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        context: [core/api-fastapi, ai/research-agent, ai/validator-agent]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t test-build:ci ${{ matrix.context }}
+
+  # ── Agent System Tests ──────────────────────────────────────────────────────
+  agent-system:
+    name: Agent System Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: agent-system/base
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
+
+  # ── Pipeline Stage Tests ────────────────────────────────────────────────────
+  pipeline-stages:
+    name: Pipeline Stage Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: pipelines
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pytest==8.3.4
+      - run: pytest -q
+
+  # ── Experimental Template Tests ─────────────────────────────────────────────
+  experimental:
+    name: Experimental Template Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module:
+          - experimental/human-ai-codriver
+          - experimental/self-improving-agent
+          - experimental/collective-intelligence
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
+
+  # ── New Template Tests ───────────────────────────────────────────────────────
+  new-templates:
+    name: New Template Tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      matrix:
+        module:
+          - templates/llm-chat/multi-provider-chat
+          - templates/llm-chat/streaming-chat
+          - templates/autonomous-ai/autonomous-loop
+          - templates/universal-business
+    defaults:
+      run:
+        working-directory: ${{ matrix.module }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+      - run: pytest -q
